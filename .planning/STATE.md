@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 01-03-PLAN.md (VanillaNbtParser)
-last_updated: "2026-03-20T19:58:40.931Z"
+stopped_at: Completed 01-04-PLAN.md (PasteExecutor + SessionManager + SchematicLoader)
+last_updated: "2026-03-20T20:13:33.791Z"
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 5
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-20)
 ## Current Position
 
 Phase: 01 (core-parse-and-paste-pipeline) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 
 ## Performance Metrics
 
@@ -49,6 +49,7 @@ Plan: 4 of 5
 | Phase 01-core-parse-and-paste-pipeline P01 | 15 | 2 tasks | 13 files |
 | Phase 01-core-parse-and-paste-pipeline P02 | 45 | 2 tasks | 9 files |
 | Phase 01 P03 | 90 | 3 tasks | 7 files |
+| Phase 01 P04 | 25 | 1 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,9 @@ Recent decisions affecting current work:
 - [Phase 01-core-parse-and-paste-pipeline]: Raw NBT walk instead of StructureTemplate: unit-testable without live server; BuiltInRegistries.BLOCK suffices for vanilla block resolution
 - [Phase 01-core-parse-and-paste-pipeline]: MinecraftTestBootstrap: LoadingModList.of() with empty lists before Bootstrap.bootStrap() prevents NPE in NeoForge FeatureFlagLoader during unit tests
 - [Phase 01-core-parse-and-paste-pipeline]: testImplementation(files(sourceSets.main.compileClasspath)): Gradle 8.x workaround to expose net.minecraft.* on test classpath
+- [Phase 01]: PasteExecutor accepts PasteLevelOps interface (not ServerLevel directly) to enable unit testing without Mockito; production wraps ServerLevel in ServerLevelOpsAdapter
+- [Phase 01]: BlockEntity.loadCustomOnly(nbt, RegistryAccess.EMPTY) is the correct 1.21.x API for applying schematic NBT — calls loadAdditional without resetting DataComponents
+- [Phase 01]: PasteExecutor FLAGS = UPDATE_CLIENTS | UPDATE_SUPPRESS_DROPS | UPDATE_KNOWN_SHAPE — never UPDATE_ALL; prevents redstone cascades on large pastes
 
 ### Pending Todos
 
@@ -83,6 +87,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T19:58:40.926Z
-Stopped at: Completed 01-03-PLAN.md (VanillaNbtParser)
+Last session: 2026-03-20T20:13:33.784Z
+Stopped at: Completed 01-04-PLAN.md (PasteExecutor + SessionManager + SchematicLoader)
 Resume file: None

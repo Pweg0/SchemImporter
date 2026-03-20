@@ -34,7 +34,7 @@ Plans:
 - [x] 01-01-PLAN.md — Project scaffold, ModConfig, and core data types (SchematicHolder, BlockPlacement, EntityPlacement)
 - [x] 01-02-PLAN.md — SpongeSchematicParser: .schem v2/v3 parsing with varint decode and unknown block handling
 - [x] 01-03-PLAN.md — VanillaNbtParser: .nbt vanilla structure parsing via StructureTemplate
-- [ ] 01-04-PLAN.md — Paste engine: SchematicLoader, PasteSession, SessionManager, PasteExecutor with correctness tests
+- [x] 01-04-PLAN.md — Paste engine: SchematicLoader, PasteSession, SessionManager, PasteExecutor with correctness tests
 - [ ] 01-05-PLAN.md — CommandHandler (/schem list/load/paste), translation files (en_us, pt_br), integration checkpoint
 
 ### Phase 2: Async Paste and Production Hardening
@@ -65,6 +65,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core Parse and Paste Pipeline | 3/5 | In Progress|  |
+| 1. Core Parse and Paste Pipeline | 4/5 | In Progress|  |
 | 2. Async Paste and Production Hardening | 0/? | Not started | - |
 | 3. Operator Quality of Life | 0/? | Not started | - |

@@ -25,12 +25,12 @@
 
 - [ ] **PASTE-01**: Async tick-spread paste — blocks placed across multiple ticks via ServerTickEvent.Post
 - [ ] **PASTE-02**: Configurable blocks-per-tick rate (default conservative for AllTheMods load)
-- [ ] **PASTE-03**: Correct setBlock flags to avoid neighbor-update cascade (no UPDATE_ALL)
-- [ ] **PASTE-04**: Force-load chunks before pasting, release after completion
-- [ ] **PASTE-05**: `--ignore-air` flag to skip air blocks and preserve existing terrain
-- [ ] **PASTE-06**: Block entities (chests, signs, banners, etc.) correctly placed with NBT data
-- [ ] **PASTE-07**: Entities (armor stands, item frames, mobs) imported from schematic
-- [ ] **PASTE-08**: Progress feedback — show % complete and ETA in chat during paste
+- [x] **PASTE-03**: Correct setBlock flags to avoid neighbor-update cascade (no UPDATE_ALL)
+- [x] **PASTE-04**: Force-load chunks before pasting, release after completion
+- [x] **PASTE-05**: `--ignore-air` flag to skip air blocks and preserve existing terrain
+- [x] **PASTE-06**: Block entities (chests, signs, banners, etc.) correctly placed with NBT data
+- [x] **PASTE-07**: Entities (armor stands, item frames, mobs) imported from schematic
+- [x] **PASTE-08**: Progress feedback — show % complete and ETA in chat during paste
 
 ### Placement
 
@@ -81,12 +81,12 @@
 | CMD-06 | Phase 1 | Complete |
 | PASTE-01 | Phase 2 | Pending |
 | PASTE-02 | Phase 2 | Pending |
-| PASTE-03 | Phase 1 | Pending |
-| PASTE-04 | Phase 1 | Pending |
-| PASTE-05 | Phase 1 | Pending |
-| PASTE-06 | Phase 1 | Pending |
-| PASTE-07 | Phase 1 | Pending |
-| PASTE-08 | Phase 1 | Pending |
+| PASTE-03 | Phase 1 | Complete |
+| PASTE-04 | Phase 1 | Complete |
+| PASTE-05 | Phase 1 | Complete |
+| PASTE-06 | Phase 1 | Complete |
+| PASTE-07 | Phase 1 | Complete |
+| PASTE-08 | Phase 1 | Complete |
 | PLACE-01 | Phase 3 | Pending |
 | PLACE-02 | Phase 3 | Pending |
 | PLACE-03 | Phase 3 | Pending |
