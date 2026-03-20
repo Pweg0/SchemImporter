@@ -6,7 +6,6 @@ import com.schematicimporter.schematic.SpongeSchematicParser;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
-import net.minecraft.server.Bootstrap;
 import net.minecraft.world.level.block.Blocks;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -38,7 +37,7 @@ class UnknownBlockHandlingTest {
 
     @BeforeAll
     static void bootstrapMinecraft() {
-        Bootstrap.bootStrap();
+        MinecraftTestBootstrap.init();
     }
 
     /**

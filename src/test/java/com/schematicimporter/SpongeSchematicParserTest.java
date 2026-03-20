@@ -4,11 +4,8 @@ import com.schematicimporter.schematic.SchematicHolder;
 import com.schematicimporter.schematic.SpongeSchematicParser;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.IntArrayTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtIo;
-import net.minecraft.nbt.ShortTag;
-import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -34,7 +31,7 @@ class SpongeSchematicParserTest {
 
     @BeforeAll
     static void bootstrapMinecraft() {
-        Bootstrap.bootStrap();
+        MinecraftTestBootstrap.init();
     }
 
     // ---------------------------------------------------------------------------

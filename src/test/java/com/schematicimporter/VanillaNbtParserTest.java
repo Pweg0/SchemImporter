@@ -5,8 +5,6 @@ import com.schematicimporter.schematic.EntityPlacement;
 import com.schematicimporter.schematic.SchematicHolder;
 import com.schematicimporter.schematic.VanillaNbtParser;
 import net.minecraft.nbt.*;
-import net.minecraft.server.Bootstrap;
-import net.minecraft.SharedConstants;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
@@ -46,9 +44,8 @@ class VanillaNbtParserTest {
 
     @BeforeAll
     static void setup() throws IOException {
-        // Initialize Minecraft registries — required for BlockState lookups
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
+        // Initialize Minecraft + NeoForge FML registries for unit tests
+        MinecraftTestBootstrap.init();
 
         // Build the fixture CompoundTag programmatically
         CompoundTag root = buildFixtureNbt();
