@@ -1,0 +1,13 @@
+{
+  "schematicimporter.list.empty": "Nenhum esquemático encontrado na pasta de esquemáticos.",
+  "schematicimporter.list.header": "Encontrado(s) %s esquemático(s):",
+  "schematicimporter.list.entry": "  %s (%s) [%dx%dx%d]",
+  "schematicimporter.load.success": "Carregado '%s' (%s blocos).",
+  "schematicimporter.warn.unknown_blocks": "Aviso: Blocos desconhecidos encontrados: %s",
+  "schematicimporter.warn.confirm_required": "Execute /schem paste novamente para confirmar e substituir blocos desconhecidos por ar.",
+  "schematicimporter.paste.complete": "Colocados %s blocos em %ss. Entidades geradas: %s",
+  "schematicimporter.paste.unknown_replaced": "%s bloco(s) desconhecido(s) substituído(s) por ar.",
+  "schematicimporter.error.no_schematic_loaded": "Nenhum esquemático carregado. Use /schem load <nome> primeiro.",
+  "schematicimporter.error.load_failed": "Falha ao carregar '%s': %s",
+  "schematicimporter.error.player_only": "Este comando só pode ser executado por um jogador."
+}

@@ -1,0 +1,13 @@
+{
+  "schematicimporter.list.empty": "No schematics found in the schematics folder.",
+  "schematicimporter.list.header": "Found %s schematic(s):",
+  "schematicimporter.list.entry": "  %s (%s) [%dx%dx%d]",
+  "schematicimporter.load.success": "Loaded '%s' (%s blocks).",
+  "schematicimporter.warn.unknown_blocks": "Warning: Unknown blocks found: %s",
+  "schematicimporter.warn.confirm_required": "Run /schem paste again to confirm and replace unknown blocks with air.",
+  "schematicimporter.paste.complete": "Placed %s blocks in %ss. Entities spawned: %s",
+  "schematicimporter.paste.unknown_replaced": "%s unknown block(s) replaced with air.",
+  "schematicimporter.error.no_schematic_loaded": "No schematic loaded. Use /schem load <name> first.",
+  "schematicimporter.error.load_failed": "Failed to load '%s': %s",
+  "schematicimporter.error.player_only": "This command can only be run by a player."
+}
