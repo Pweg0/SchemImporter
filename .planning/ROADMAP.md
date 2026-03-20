@@ -35,7 +35,7 @@ Plans:
 - [x] 01-02-PLAN.md — SpongeSchematicParser: .schem v2/v3 parsing with varint decode and unknown block handling
 - [x] 01-03-PLAN.md — VanillaNbtParser: .nbt vanilla structure parsing via StructureTemplate
 - [x] 01-04-PLAN.md — Paste engine: SchematicLoader, PasteSession, SessionManager, PasteExecutor with correctness tests
-- [ ] 01-05-PLAN.md — CommandHandler (/schem list/load/paste), translation files (en_us, pt_br), integration checkpoint
+- [x] 01-05-PLAN.md — CommandHandler (/schem list/load/paste), translation files (en_us, pt_br), integration checkpoint
 
 ### Phase 2: Async Paste and Production Hardening
 **Goal**: Paste operations are tick-spread across multiple server ticks at a configurable rate so that large structures (500+ blocks) do not cause noticeable TPS drops on a loaded AllTheMods server

@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 01-04-PLAN.md (PasteExecutor + SessionManager + SchematicLoader)
-last_updated: "2026-03-20T20:13:33.791Z"
+stopped_at: Checkpoint 01-05 Task 3 — awaiting human-verify on live server
+last_updated: "2026-03-20T20:21:18.557Z"
 progress:
   total_phases: 3
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 5
-  completed_plans: 4
+  completed_plans: 5
 ---
 
 # Project State
@@ -73,6 +73,8 @@ Recent decisions affecting current work:
 - [Phase 01]: PasteExecutor accepts PasteLevelOps interface (not ServerLevel directly) to enable unit testing without Mockito; production wraps ServerLevel in ServerLevelOpsAdapter
 - [Phase 01]: BlockEntity.loadCustomOnly(nbt, RegistryAccess.EMPTY) is the correct 1.21.x API for applying schematic NBT — calls loadAdditional without resetting DataComponents
 - [Phase 01]: PasteExecutor FLAGS = UPDATE_CLIENTS | UPDATE_SUPPRESS_DROPS | UPDATE_KNOWN_SHAPE — never UPDATE_ALL; prevents redstone cascades on large pastes
+- [Phase 01-core-parse-and-paste-pipeline]: @EventBusSubscriber without bus= param defaults to GAME bus in NeoForge 1.21.x — eliminates Bus.GAME deprecation warning
+- [Phase 01-core-parse-and-paste-pipeline]: CommandHandler auto-creates schematics directory on first /schem list — improves first-run UX without requiring manual folder setup
 
 ### Pending Todos
 
@@ -87,6 +89,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T20:13:33.784Z
-Stopped at: Completed 01-04-PLAN.md (PasteExecutor + SessionManager + SchematicLoader)
+Last session: 2026-03-20T20:21:18.550Z
+Stopped at: Checkpoint 01-05 Task 3 — awaiting human-verify on live server
 Resume file: None

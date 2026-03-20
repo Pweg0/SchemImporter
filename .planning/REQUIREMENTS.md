@@ -14,11 +14,11 @@
 
 ### Commands
 
-- [ ] **CMD-01**: `/schem list` shows all available schematics in the server folder with file sizes
-- [ ] **CMD-02**: `/schem load <name>` loads a schematic into the operator's session
-- [ ] **CMD-03**: `/schem paste` pastes the loaded schematic at the operator's current position
+- [x] **CMD-01**: `/schem list` shows all available schematics in the server folder with file sizes
+- [x] **CMD-02**: `/schem load <name>` loads a schematic into the operator's session
+- [x] **CMD-03**: `/schem paste` pastes the loaded schematic at the operator's current position
 - [ ] **CMD-04**: `/schem cancel` cancels an in-progress async paste operation
-- [ ] **CMD-05**: All commands restricted to OP level 2+ (server operators only)
+- [x] **CMD-05**: All commands restricted to OP level 2+ (server operators only)
 - [x] **CMD-06**: Commands work server-side only — no client mod required
 
 ### Paste Engine
@@ -73,11 +73,11 @@
 | PARSE-02 | Phase 1 | Complete |
 | PARSE-03 | Phase 1 | Complete |
 | PARSE-04 | Phase 1 | Complete |
-| CMD-01 | Phase 1 | Pending |
-| CMD-02 | Phase 1 | Pending |
-| CMD-03 | Phase 1 | Pending |
+| CMD-01 | Phase 1 | Complete |
+| CMD-02 | Phase 1 | Complete |
+| CMD-03 | Phase 1 | Complete |
 | CMD-04 | Phase 2 | Pending |
-| CMD-05 | Phase 1 | Pending |
+| CMD-05 | Phase 1 | Complete |
 | CMD-06 | Phase 1 | Complete |
 | PASTE-01 | Phase 2 | Pending |
 | PASTE-02 | Phase 2 | Pending |
