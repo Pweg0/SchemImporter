@@ -1,0 +1,8 @@
+.planning/
+.gradle/
+build/
+logs/
+run/
+out/
+*.iml
+.idea/

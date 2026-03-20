@@ -1,0 +1,88 @@
+plugins {
+    id 'net.neoforged.moddev' version '2.0.140'
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+group = project.property('mod_group_id')
+version = project.property('mod_version')
+
+neoForge {
+    version = project.property('neo_version')
+
+    parchment {
+        mappingsVersion = project.property('parchment_mappings_version')
+        minecraftVersion = project.property('parchment_minecraft_version')
+    }
+
+    runs {
+        server {
+            server()
+        }
+    }
+
+    mods {
+        "${project.mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // JUnit 5 for unit tests (runs without a live server — pure Java tests)
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // NeoForge on test classpath so unit tests can reference ModConfigSpec, etc.
+    // These tests do not require a running Minecraft server.
+    testImplementation "net.neoforged:neoforge:${project.property('neo_version')}"
+
+    // nightconfig is a runtime dependency of ModConfigSpec.Builder — needed for unit tests
+    testRuntimeOnly 'com.electronwill.night-config:core:3.8.3'
+    testRuntimeOnly 'com.electronwill.night-config:toml:3.8.3'
+
+    // FML loader needed for IConfigSpec (transitively required by ModConfigSpec)
+    testRuntimeOnly 'net.neoforged.fancymodloader:loader:4.0.42'
+
+    // Embeds schematic4j into the mod JAR via NeoForge Jar-in-Jar
+    jarJar(implementation('net.sandrohc:schematic4j')) {
+        version {
+            strictly '[1.1.0,2.0)'
+            prefer '1.1.0'
+        }
+    }
+}
+
+processResources {
+    def expandProps = [
+        'mod_id'     : project.property('mod_id'),
+        'mod_version': project.property('mod_version'),
+        'loader_version_range'   : project.property('loader_version_range'),
+        'minecraft_version_range': project.property('minecraft_version_range'),
+    ]
+    inputs.properties(expandProps)
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand(expandProps)
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
+
+jar {
+    manifest {
+        attributes([
+            'FMLModType': 'MOD'
+        ])
+    }
+}
+
+// Enable NeoForge Jar-in-Jar packaging so schematic4j is embedded in the mod jar
+tasks.named('jarJar') {
+    enabled = true
+}
