@@ -41,6 +41,13 @@ dependencies {
     // These tests do not require a running Minecraft server.
     testImplementation "net.neoforged:neoforge:${project.property('neo_version')}"
 
+    // Minecraft game classes (NbtIo, CompoundTag, Bootstrap, BuiltInRegistries, etc.) are in
+    // the ModDevGradle-generated merged jar (build/moddev/artifacts/neoforge-*.jar).
+    // That jar is on the main compileClasspath but NOT on the testCompileClasspath by default.
+    // Adding it here enables unit tests to use Minecraft NBT and registry APIs directly.
+    testImplementation(files(sourceSets.main.compileClasspath))
+    testRuntimeOnly(files(sourceSets.main.runtimeClasspath))
+
     // nightconfig is a runtime dependency of ModConfigSpec.Builder — needed for unit tests
     testRuntimeOnly 'com.electronwill.night-config:core:3.8.3'
     testRuntimeOnly 'com.electronwill.night-config:toml:3.8.3'
@@ -86,3 +93,4 @@ jar {
 tasks.named('jarJar') {
     enabled = true
 }
+
