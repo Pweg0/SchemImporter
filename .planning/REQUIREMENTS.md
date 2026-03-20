@@ -8,7 +8,7 @@
 ### Parsing
 
 - [x] **PARSE-01**: Mod can parse .schem (Sponge Schematic v1/v2/v3) files from server schematics folder
-- [ ] **PARSE-02**: Mod can parse .nbt (Vanilla Structure) files from server schematics folder
+- [x] **PARSE-02**: Mod can parse .nbt (Vanilla Structure) files from server schematics folder
 - [x] **PARSE-03**: Parser correctly handles modded blocks from AllTheMods palette (not just vanilla)
 - [x] **PARSE-04**: Lazy loading — read schematic metadata (dimensions, block count) without loading full block data into memory
 
@@ -70,7 +70,7 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | PARSE-01 | Phase 1 | Complete |
-| PARSE-02 | Phase 1 | Pending |
+| PARSE-02 | Phase 1 | Complete |
 | PARSE-03 | Phase 1 | Complete |
 | PARSE-04 | Phase 1 | Complete |
 | CMD-01 | Phase 1 | Pending |

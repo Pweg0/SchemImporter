@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 01-02-PLAN.md (SpongeSchematicParser)
-last_updated: "2026-03-20T19:58:36.819Z"
+stopped_at: Completed 01-03-PLAN.md (VanillaNbtParser)
+last_updated: "2026-03-20T19:58:40.931Z"
 progress:
   total_phases: 3
   completed_phases: 0
@@ -68,6 +68,7 @@ Recent decisions affecting current work:
 - [Phase 01-core-parse-and-paste-pipeline]: Minecraft game classes (NbtIo, CompoundTag, Bootstrap) are in ModDevGradle merged jar, not Maven neoforge-universal.jar — test classpath needs files(sourceSets.main.compileClasspath) in build.gradle
 - [Phase 01-core-parse-and-paste-pipeline]: Raw NBT walk instead of StructureTemplate: unit-testable without live server; BuiltInRegistries.BLOCK suffices for vanilla block resolution
 - [Phase 01-core-parse-and-paste-pipeline]: MinecraftTestBootstrap: LoadingModList.of() with empty lists before Bootstrap.bootStrap() prevents NPE in NeoForge FeatureFlagLoader during unit tests
+- [Phase 01-core-parse-and-paste-pipeline]: testImplementation(files(sourceSets.main.compileClasspath)): Gradle 8.x workaround to expose net.minecraft.* on test classpath
 
 ### Pending Todos
 
@@ -82,6 +83,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T19:58:09.857Z
-Stopped at: Completed 01-02-PLAN.md (SpongeSchematicParser)
+Last session: 2026-03-20T19:58:40.926Z
+Stopped at: Completed 01-03-PLAN.md (VanillaNbtParser)
 Resume file: None
