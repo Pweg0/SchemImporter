@@ -1,8 +1,11 @@
 package com.schematicimporter.paste;
 
+import com.schematicimporter.config.ModConfig;
 import com.schematicimporter.schematic.BlockPlacement;
 import com.schematicimporter.schematic.EntityPlacement;
 import com.schematicimporter.schematic.SchematicHolder;
+import com.schematicimporter.session.PasteSession;
+import com.schematicimporter.session.SessionManager;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
@@ -11,14 +14,24 @@ import net.minecraft.nbt.DoubleTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.ChunkPos;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Synchronous paste engine — places all blocks and entities from a {@link SchematicHolder}
@@ -46,6 +59,7 @@ import java.util.Set;
  * The production entry point {@link #execute(SchematicHolder, BlockPos, boolean, CommandSourceStack, ServerLevel)}
  * wraps the live level in a {@link ServerLevelOpsAdapter}.</p>
  */
+@EventBusSubscriber(modid = "schematicimporter")
 public class PasteExecutor {
 
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -69,9 +83,202 @@ public class PasteExecutor {
      *
      * <p>Package-private so tests can access it via {@code PasteExecutor.FLAGS}.</p>
      */
-    public static final int FLAGS = Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS | Block.UPDATE_KNOWN_SHAPE;
+    // Flag 2 = UPDATE_CLIENTS (send to players), Flag 64 = UPDATE_SUPPRESS_LIGHT
+    // We avoid UPDATE_NEIGHBORS (1) to prevent cascade updates on large pastes
+    public static final int FLAGS = Block.UPDATE_CLIENTS;
+
+    /** Active async paste tasks keyed by player UUID. */
+    private static final Map<UUID, AsyncPasteTask> ACTIVE_TASKS = new HashMap<>();
 
     private PasteExecutor() {}
+
+    // =========================================================================
+    // Async paste — tick listener, start, cancel, completion
+    // =========================================================================
+
+    /**
+     * Global tick listener — drains active async paste tasks each server tick.
+     *
+     * <p>Reads {@code blocksPerTick} from live config each tick (PASTE-02), so
+     * config changes take effect immediately without restart.</p>
+     */
+    @SubscribeEvent
+    public static void onServerTick(ServerTickEvent.Post event) {
+        if (ACTIVE_TASKS.isEmpty()) return;
+
+        int batchSize = ModConfig.CONFIG.blocksPerTick.get();
+        Iterator<Map.Entry<UUID, AsyncPasteTask>> it = ACTIVE_TASKS.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<UUID, AsyncPasteTask> entry = it.next();
+            AsyncPasteTask task = entry.getValue();
+            AsyncPasteTask.TickResult result = task.tick(batchSize);
+
+            // Send action bar progress if player is online
+            ServerPlayer player = event.getServer().getPlayerList().getPlayer(entry.getKey());
+            if (player != null && result == AsyncPasteTask.TickResult.CONTINUE) {
+                player.displayClientMessage(AsyncPasteTask.buildProgressComponent(task), true);
+            }
+
+            if (result != AsyncPasteTask.TickResult.CONTINUE) {
+                it.remove();
+                handleCompletion(entry.getKey(), task, result, event.getServer());
+            }
+        }
+    }
+
+    /**
+     * Start an async paste for the given player.
+     *
+     * <p>Force-loads chunks upfront, creates the task, updates session state,
+     * and registers the task in the active map.</p>
+     */
+    public static void startAsync(SchematicHolder holder, BlockPos origin, boolean ignoreAir,
+                                   UUID playerUuid, ServerLevel level) {
+        Set<ChunkPos> forcedChunks = computeChunks(origin, holder);
+        PasteLevelOps ops = new ServerLevelOpsAdapter(level);
+        for (ChunkPos cp : forcedChunks) {
+            ops.setChunkForced(cp.x, cp.z, true);
+        }
+
+        // Capture undo snapshot before placing any blocks
+        if (ModConfig.CONFIG.maxUndoLevels.get() > 0) {
+            UndoSnapshot snapshot = captureSnapshot(holder, origin, ignoreAir, level, forcedChunks);
+            UndoManager.INSTANCE.push(playerUuid, snapshot);
+        }
+
+        AsyncPasteTask task = new AsyncPasteTask(holder, origin, ignoreAir, playerUuid, forcedChunks, ops);
+
+        PasteSession session = SessionManager.INSTANCE.getOrCreate(playerUuid);
+        session.startPasting(task);
+
+        ACTIVE_TASKS.put(playerUuid, task);
+
+        LOGGER.info("Started async paste for player {}: {} blocks, {} blocks/tick",
+            playerUuid, task.totalBlocks(), ModConfig.CONFIG.blocksPerTick.get());
+    }
+
+    /**
+     * Start an undo operation for the given player.
+     *
+     * @return true if an undo snapshot was available and the undo paste was started
+     */
+    public static boolean startUndo(UUID playerUuid, ServerLevel level) {
+        UndoSnapshot snapshot = UndoManager.INSTANCE.pop(playerUuid);
+        if (snapshot == null) return false;
+
+        // Build a SchematicHolder from the snapshot's block records
+        List<BlockPlacement> blocks = new ArrayList<>(snapshot.blocks().size());
+        for (UndoSnapshot.BlockRecord rec : snapshot.blocks()) {
+            blocks.add(new BlockPlacement(
+                rec.worldPos(),  // worldPos stored directly (not relative)
+                rec.originalState(),
+                rec.originalBlockEntityNbt(),
+                false, null
+            ));
+        }
+
+        // For undo, origin is ZERO because worldPos is already absolute
+        SchematicHolder undoHolder = new SchematicHolder(0, 0, 0, blocks, List.of());
+
+        Set<ChunkPos> forcedChunks = snapshot.affectedChunks();
+        PasteLevelOps ops = new ServerLevelOpsAdapter(level);
+        for (ChunkPos cp : forcedChunks) {
+            ops.setChunkForced(cp.x, cp.z, true);
+        }
+
+        AsyncPasteTask task = new AsyncPasteTask(undoHolder, BlockPos.ZERO, false,
+            playerUuid, forcedChunks, ops);
+
+        PasteSession session = SessionManager.INSTANCE.getOrCreate(playerUuid);
+        session.startPasting(task);
+        ACTIVE_TASKS.put(playerUuid, task);
+
+        LOGGER.info("Started undo for player {}: {} blocks to restore", playerUuid, snapshot.totalBlocks());
+        return true;
+    }
+
+    /**
+     * Capture the current world state at every block position that will be modified by the paste.
+     */
+    private static UndoSnapshot captureSnapshot(SchematicHolder holder, BlockPos origin,
+                                                  boolean ignoreAir, ServerLevel level,
+                                                  Set<ChunkPos> forcedChunks) {
+        List<UndoSnapshot.BlockRecord> records = new ArrayList<>();
+        for (BlockPlacement bp : holder.blocks()) {
+            if (ignoreAir && bp.blockState().isAir()) continue;
+            BlockPos worldPos = origin.offset(bp.relativePos());
+            net.minecraft.world.level.block.state.BlockState currentState = level.getBlockState(worldPos);
+            CompoundTag beNbt = null;
+            BlockEntity be = level.getBlockEntity(worldPos);
+            if (be != null) {
+                beNbt = be.saveWithoutMetadata(level.registryAccess());
+            }
+            records.add(new UndoSnapshot.BlockRecord(worldPos.immutable(), currentState, beNbt));
+        }
+        return new UndoSnapshot(records, forcedChunks, records.size());
+    }
+
+    /**
+     * Request cancellation of the active paste for the given player.
+     *
+     * @return true if a task was found and cancel was requested
+     */
+    public static boolean requestCancel(UUID playerUuid) {
+        AsyncPasteTask task = ACTIVE_TASKS.get(playerUuid);
+        if (task != null) {
+            task.requestCancel();
+            return true;
+        }
+        return false;
+    }
+
+    private static void handleCompletion(UUID playerUuid, AsyncPasteTask task,
+                                          AsyncPasteTask.TickResult result,
+                                          net.minecraft.server.MinecraftServer server) {
+        // Release forced chunks — must always happen
+        task.releaseChunks();
+
+        // Update session state
+        PasteSession session = SessionManager.INSTANCE.getOrCreate(playerUuid);
+        if (result == AsyncPasteTask.TickResult.DONE) {
+            session.completePaste();
+        } else {
+            session.cancelPaste();
+        }
+
+        // Send feedback
+        ServerPlayer player = server.getPlayerList().getPlayer(playerUuid);
+        if (player != null) {
+            if (result == AsyncPasteTask.TickResult.DONE) {
+                double elapsedSec = (System.currentTimeMillis() - task.getStartTimeMs()) / 1000.0;
+                player.sendSystemMessage(
+                    Component.literal(
+                        com.schematicimporter.command.ServerTranslations.get(
+                            "schematicimporter.paste.complete",
+                            String.format("%,d", task.blocksPlaced()),
+                            String.format("%.1f", elapsedSec),
+                            task.entitiesSpawned())
+                    ).withStyle(ChatFormatting.GREEN));
+            } else {
+                player.sendSystemMessage(
+                    Component.literal(
+                        com.schematicimporter.command.ServerTranslations.get(
+                            "schematicimporter.cancel.complete",
+                            String.format("%,d", task.blocksPlaced()),
+                            String.format("%,d", task.totalBlocks()))
+                    ).withStyle(ChatFormatting.YELLOW));
+            }
+        } else {
+            // Player offline — log to console
+            if (result == AsyncPasteTask.TickResult.DONE) {
+                LOGGER.info("Async paste completed for offline player {}: {} blocks placed",
+                    playerUuid, task.blocksPlaced());
+            } else {
+                LOGGER.info("Async paste cancelled for offline player {}: {}/{} blocks placed",
+                    playerUuid, task.blocksPlaced(), task.totalBlocks());
+            }
+        }
+    }
 
     // =========================================================================
     // Production entry point
@@ -138,19 +345,30 @@ public class PasteExecutor {
             ops.setChunkForced(cp.x, cp.z, true);
         }
 
+        int setBlockFails = 0;
+        int airSkipped = 0;
         try {
             // Step 2: Place blocks
             for (BlockPlacement bp : holder.blocks()) {
-                if (ignoreAir && bp.blockState().isAir()) continue;
+                // Skip air blocks when ignoreAir is true (preserve existing terrain)
+                if (ignoreAir && bp.blockState().isAir()) {
+                    airSkipped++;
+                    continue;
+                }
 
-                // Apply sponge offset subtraction (Pitfall 7):
-                // effectivePos = pasteOrigin + blockRelPos - spongeOffset
-                BlockPos worldPos = origin
-                    .offset(bp.relativePos())
-                    .offset(-offset[0], -offset[1], -offset[2]);
+                // Place block at origin + relative position (offset ignored for predictable placement)
+                BlockPos worldPos = origin.offset(bp.relativePos());
 
-                ops.setBlock(worldPos, bp.blockState(), FLAGS);
+                boolean success = ops.setBlock(worldPos, bp.blockState(), FLAGS);
+                if (!success) setBlockFails++;
                 blocksPlaced++;
+
+                // Log first non-air block placement for debugging
+                if (blocksPlaced == 1 || (blocksPlaced <= 5 && !bp.blockState().isAir())) {
+                    LOGGER.info("PasteExecutor: block #{} at {} state={} success={} relPos={} offset=[{},{},{}]",
+                        blocksPlaced, worldPos, bp.blockState(), success,
+                        bp.relativePos(), offset[0], offset[1], offset[2]);
+                }
 
                 // Step 3: Apply block entity NBT
                 if (bp.blockEntityNbt() != null) {
@@ -200,22 +418,26 @@ public class PasteExecutor {
         final int finalBlocks = blocksPlaced;
         final int finalEntities = entitiesSpawned;
         final int finalUnknown = unknownCount;
+        final int finalSetBlockFails = setBlockFails;
+        final int finalAirSkipped = airSkipped;
 
-        feedback.sendSuccess(() -> Component.translatable(
-            "schematicimporter.paste.complete",
-            String.format("%,d", finalBlocks),
-            String.format("%.1f", elapsedSec),
-            finalEntities
+        feedback.sendSuccess(() -> Component.literal(
+            com.schematicimporter.command.ServerTranslations.get(
+                "schematicimporter.paste.complete",
+                String.format("%,d", finalBlocks),
+                String.format("%.1f", elapsedSec),
+                finalEntities)
         ).withStyle(ChatFormatting.GREEN), false);
 
         if (finalUnknown > 0) {
-            feedback.sendSuccess(() -> Component.translatable(
-                "schematicimporter.paste.unknown_replaced", finalUnknown
+            feedback.sendSuccess(() -> Component.literal(
+                com.schematicimporter.command.ServerTranslations.get(
+                    "schematicimporter.paste.unknown_replaced", finalUnknown)
             ).withStyle(ChatFormatting.YELLOW), false);
         }
 
-        LOGGER.info("PasteExecutor: placed {} blocks, spawned {} entities in {}s ({} unknown replaced with air)",
-            finalBlocks, finalEntities, String.format("%.2f", elapsedSec), finalUnknown);
+        LOGGER.info("PasteExecutor: placed {} blocks, spawned {} entities in {}s ({} unknown replaced with air, {} setBlock fails, {} air skipped)",
+            finalBlocks, finalEntities, String.format("%.2f", elapsedSec), finalUnknown, finalSetBlockFails, finalAirSkipped);
     }
 
     // =========================================================================

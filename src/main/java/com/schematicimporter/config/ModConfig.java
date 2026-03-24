@@ -18,6 +18,9 @@ public class ModConfig {
     /** Path to the schematics folder, relative to server root. Default: "schematics". */
     public final ModConfigSpec.ConfigValue<String> schematicsFolder;
 
+    /** Maximum number of undo levels per player. Default: 5, range: 0–20. 0 disables undo. */
+    public final ModConfigSpec.IntValue maxUndoLevels;
+
     private ModConfig(ModConfigSpec.Builder builder) {
         blocksPerTick = builder
                 .comment("Blocks to place per server tick during async paste (default: 100, range: 1-2000)")
@@ -26,6 +29,10 @@ public class ModConfig {
         schematicsFolder = builder
                 .comment("Path to schematics folder, relative to server root (default: schematics)")
                 .define("schematics_folder", "schematics");
+
+        maxUndoLevels = builder
+                .comment("Maximum undo levels per player (default: 5, range: 0-20, 0 disables undo)")
+                .defineInRange("max_undo_levels", 5, 0, 20);
     }
 
     static {

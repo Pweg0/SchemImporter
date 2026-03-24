@@ -154,6 +154,11 @@ public class SpongeSchematicParser {
      * <p>Extracted to allow future unit tests to bypass file I/O if needed.</p>
      */
     static SchematicHolder parseFromCompoundTag(CompoundTag root) {
+        // Handle "Schematic" wrapper tag if present (some tools wrap the root)
+        if (root.contains("Schematic")) {
+            root = root.getCompound("Schematic");
+        }
+
         // 1. Read dimensions
         int width  = root.getShort("Width");
         int height = root.getShort("Height");
@@ -163,16 +168,39 @@ public class SpongeSchematicParser {
         // 2. Read optional Offset [x, y, z] — default {0,0,0} if not present (PITFALL 7)
         int[] offset = root.contains("Offset") ? root.getIntArray("Offset") : new int[]{0, 0, 0};
 
-        // 3. Get Blocks sub-tag
-        CompoundTag blocksTag = root.getCompound("Blocks");
+        // 3. Detect format version and locate palette + block data
+        //    v3: Palette and Data inside "Blocks" compound
+        //    v2: Palette at root level, block data key is "BlockData" (not "Data")
+        CompoundTag paletteNbt;
+        byte[] data;
+        CompoundTag blocksTag;
 
-        // 4. Build palette: NBT maps "blockStateString" -> paletteIndex (int)
-        //    We invert this to paletteIndex -> entry for fast lookup
-        CompoundTag paletteNbt = blocksTag.getCompound("Palette");
+        if (root.contains("Blocks", Tag.TAG_COMPOUND)) {
+            // Sponge Schematic v3
+            blocksTag = root.getCompound("Blocks");
+            paletteNbt = blocksTag.getCompound("Palette");
+            data = blocksTag.getByteArray("Data");
+            LOGGER.debug("SpongeSchematicParser: Detected v3 format");
+        } else {
+            // Sponge Schematic v2 — palette and block data at root level
+            blocksTag = root;
+            paletteNbt = root.getCompound("Palette");
+            data = root.getByteArray("BlockData");
+            LOGGER.debug("SpongeSchematicParser: Detected v2 format");
+        }
+
+        // 4. Build palette
         PaletteEntry[] palette = buildPalette(paletteNbt);
+        // Log palette stats at INFO level for debugging
+        int knownCount = 0, unknownPaletteCount = 0;
+        for (PaletteEntry pe : palette) {
+            if (pe.wasUnknown) unknownPaletteCount++;
+            else knownCount++;
+        }
+        LOGGER.info("SpongeSchematicParser: Palette has {} entries ({} known, {} unknown), data has {} bytes for {} blocks",
+            palette.length, knownCount, unknownPaletteCount, data.length, totalBlocks);
 
         // 5. Decode varint block data
-        byte[] data = blocksTag.getByteArray("Data");
         int[] paletteIndices = decodeVarints(data, totalBlocks);
 
         // 6. Build block placements from flat array

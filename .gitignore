@@ -6,3 +6,5 @@ run/
 out/
 *.iml
 .idea/
+.claude/
+CLAUDE.md

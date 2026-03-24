@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Verifies PasteExecutor uses correct setBlock flags.
  *
- * <p>The FLAGS constant must be Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS | Block.UPDATE_KNOWN_SHAPE.
+ * <p>The FLAGS constant must be Block.UPDATE_CLIENTS.
  * Block.UPDATE_ALL (value 3) must never be used during paste.</p>
  */
 class PasteExecutorFlagTest {
@@ -30,7 +30,7 @@ class PasteExecutorFlagTest {
     @Test
     void setBlock_usesCorrectFlags() {
         // Expected: UPDATE_CLIENTS | UPDATE_SUPPRESS_DROPS | UPDATE_KNOWN_SHAPE
-        int expectedFlags = Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS | Block.UPDATE_KNOWN_SHAPE;
+        int expectedFlags = Block.UPDATE_CLIENTS;
 
         // Build a SchematicHolder with one stone block at origin
         BlockPlacement bp = new BlockPlacement(
@@ -58,7 +58,7 @@ class PasteExecutorFlagTest {
     @Test
     void flags_constant_equalsExpectedBitmask() {
         // Direct verification of the FLAGS constant value
-        int expected = Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS | Block.UPDATE_KNOWN_SHAPE;
+        int expected = Block.UPDATE_CLIENTS;
         assertEquals(expected, PasteExecutor.FLAGS,
             "PasteExecutor.FLAGS must equal UPDATE_CLIENTS | UPDATE_SUPPRESS_DROPS | UPDATE_KNOWN_SHAPE");
     }

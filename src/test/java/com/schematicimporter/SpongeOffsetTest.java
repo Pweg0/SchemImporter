@@ -15,11 +15,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
- * Verifies sponge offset subtraction formula (Pitfall 7).
+ * Verifies sponge offset is IGNORED for predictable placement (Phase 1 hotfix).
  *
- * <p>Formula: worldPos = pasteOrigin + blockRelPos - spongeOffset</p>
- * <p>Example: origin=(100,64,200), relPos=(3,1,5), spongeOffset={2,0,3}
- *    → worldPos = (101, 65, 202)</p>
+ * <p>The Sponge Offset tag is parsed but intentionally not applied during paste.
+ * The structure always anchors at the player's feet (pasteOrigin + blockRelPos).
+ * This avoids confusing placement behavior caused by inconsistent offset values
+ * across different schematic editors.</p>
+ *
+ * <p>Formula: worldPos = pasteOrigin + blockRelPos (offset ignored)</p>
  */
 class SpongeOffsetTest {
 
@@ -29,12 +32,12 @@ class SpongeOffsetTest {
     }
 
     @Test
-    void spongeOffset_subtractedFromWorldPos() {
-        // origin=(100,64,200), relPos=(3,1,5), spongeOffset={2,0,3}
-        // expected worldPos = (100+3-2, 64+1-0, 200+5-3) = (101, 65, 202)
+    void spongeOffset_ignoredForPredictablePlacement() {
+        // origin=(100,64,200), relPos=(3,1,5), spongeOffset={-2,0,-3}
+        // Offset is IGNORED: worldPos = origin + relPos = (103, 65, 205)
         BlockPos origin = new BlockPos(100, 64, 200);
         BlockPos relPos = new BlockPos(3, 1, 5);
-        int[] spongeOffset = {2, 0, 3};
+        int[] spongeOffset = {-2, 0, -3};
 
         BlockPlacement bp = new BlockPlacement(relPos, Blocks.STONE.defaultBlockState(), null, false, null);
         SchematicHolder holder = new SchematicHolder(4, 2, 6, List.of(bp), List.of(), spongeOffset);
@@ -45,14 +48,13 @@ class SpongeOffsetTest {
         assertFalse(stub.setBlockCalls.isEmpty(), "setBlock must be called");
 
         BlockPos actualWorldPos = stub.setBlockCalls.get(0).pos();
-        assertEquals(101, actualWorldPos.getX(), "worldX = 100+3-2 = 101");
-        assertEquals(65, actualWorldPos.getY(), "worldY = 64+1-0 = 65");
-        assertEquals(202, actualWorldPos.getZ(), "worldZ = 200+5-3 = 202");
+        assertEquals(103, actualWorldPos.getX(), "worldX = 100+3 = 103 (offset ignored)");
+        assertEquals(65, actualWorldPos.getY(), "worldY = 64+1 = 65 (offset ignored)");
+        assertEquals(205, actualWorldPos.getZ(), "worldZ = 200+5 = 205 (offset ignored)");
     }
 
     @Test
     void zeroSpongeOffset_producesIdentityBehavior() {
-        // When spongeOffset={0,0,0}: worldPos = origin + relPos (no change — backward compatible)
         BlockPos origin = new BlockPos(100, 64, 200);
         BlockPos relPos = new BlockPos(3, 1, 5);
         int[] spongeOffset = {0, 0, 0};
@@ -66,23 +68,21 @@ class SpongeOffsetTest {
         assertFalse(stub.setBlockCalls.isEmpty(), "setBlock must be called");
 
         BlockPos actualWorldPos = stub.setBlockCalls.get(0).pos();
-        assertEquals(103, actualWorldPos.getX(), "worldX = 100+3-0 = 103");
-        assertEquals(65, actualWorldPos.getY(), "worldY = 64+1-0 = 65");
-        assertEquals(205, actualWorldPos.getZ(), "worldZ = 200+5-0 = 205");
+        assertEquals(103, actualWorldPos.getX(), "worldX = 100+3+0 = 103");
+        assertEquals(65, actualWorldPos.getY(), "worldY = 64+1+0 = 65");
+        assertEquals(205, actualWorldPos.getZ(), "worldZ = 200+5+0 = 205");
     }
 
     @Test
-    void spongeOffset_formulaDirectly() {
-        // Pure formula verification without executor
+    void spongeOffset_formulaDirectly_offsetIgnored() {
         BlockPos origin = new BlockPos(100, 64, 200);
         BlockPos relPos = new BlockPos(3, 1, 5);
-        int[] offset = {2, 0, 3};
 
-        // worldPos = origin.offset(relPos).offset(-offset[0], -offset[1], -offset[2])
-        BlockPos worldPos = origin.offset(relPos).offset(-offset[0], -offset[1], -offset[2]);
+        // Current formula: worldPos = origin.offset(relPos) — offset is NOT applied
+        BlockPos worldPos = origin.offset(relPos);
 
-        assertEquals(101, worldPos.getX(), "100+3-2=101");
-        assertEquals(65, worldPos.getY(), "64+1-0=65");
-        assertEquals(202, worldPos.getZ(), "200+5-3=202");
+        assertEquals(103, worldPos.getX(), "100+3=103");
+        assertEquals(65, worldPos.getY(), "64+1=65");
+        assertEquals(205, worldPos.getZ(), "200+5=205");
     }
 }

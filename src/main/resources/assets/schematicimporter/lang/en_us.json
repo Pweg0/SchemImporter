@@ -7,7 +7,22 @@
   "schematicimporter.warn.confirm_required": "Run /schem paste again to confirm and replace unknown blocks with air.",
   "schematicimporter.paste.complete": "Placed %s blocks in %ss. Entities spawned: %s",
   "schematicimporter.paste.unknown_replaced": "%s unknown block(s) replaced with air.",
+  "schematicimporter.paste.started": "Pasting %s blocks asynchronously... Use /schem cancel to stop.",
+  "schematicimporter.cancel.complete": "Paste cancelled -- %s of %s blocks placed.",
   "schematicimporter.error.no_schematic_loaded": "No schematic loaded. Use /schem load <name> first.",
   "schematicimporter.error.load_failed": "Failed to load '%s': %s",
-  "schematicimporter.error.player_only": "This command can only be run by a player."
+  "schematicimporter.error.player_only": "This command can only be run by a player.",
+  "schematicimporter.error.no_active_paste": "No active paste or preview to cancel.",
+  "schematicimporter.error.paste_in_progress": "Paste in progress -- use /schem cancel first.",
+  "schematicimporter.error.invalid_rotation": "Invalid rotation. Use 90, 180, or 270.",
+  "schematicimporter.error.not_previewing": "No active preview. Use /schem preview first.",
+  "schematicimporter.error.no_undo": "Nothing to undo.",
+  "schematicimporter.rotate.success": "Rotated %s degrees. New dimensions: %dx%dx%d.",
+  "schematicimporter.preview.started": "Preview started (%dx%dx%d). Green particles show the bounding box.",
+  "schematicimporter.preview.auto": "Preview active (%dx%dx%d). Use /schem nudge, /schem rotate, /schem confirm, or /schem paste.",
+  "schematicimporter.preview.hint": "Use /schem nudge <direction> to adjust, /schem confirm to paste, /schem cancel to stop.",
+  "schematicimporter.preview.cancelled": "Preview cancelled.",
+  "schematicimporter.nudge.success": "Nudged %s by %s. New position: %s, %s, %s.",
+  "schematicimporter.undo.started": "Undoing last paste... Use /schem cancel to stop.",
+  "schematicimporter.undo.complete": "Undo complete -- %s blocks restored in %ss."
 }

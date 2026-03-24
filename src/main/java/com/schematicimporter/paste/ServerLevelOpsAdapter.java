@@ -35,6 +35,11 @@ public class ServerLevelOpsAdapter implements PasteLevelOps {
     @Override
     public void setChunkForced(int chunkX, int chunkZ, boolean force) {
         level.setChunkForced(chunkX, chunkZ, force);
+        if (force) {
+            // Force immediate chunk load — setChunkForced alone doesn't guarantee
+            // the chunk is loaded by the time setBlock is called
+            level.getChunk(chunkX, chunkZ);
+        }
     }
 
     @Override

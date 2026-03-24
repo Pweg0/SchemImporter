@@ -7,7 +7,22 @@
   "schematicimporter.warn.confirm_required": "Execute /schem paste novamente para confirmar e substituir blocos desconhecidos por ar.",
   "schematicimporter.paste.complete": "Colocados %s blocos em %ss. Entidades geradas: %s",
   "schematicimporter.paste.unknown_replaced": "%s bloco(s) desconhecido(s) substituído(s) por ar.",
+  "schematicimporter.paste.started": "Colando %s blocos de forma assincrona... Use /schem cancel para parar.",
+  "schematicimporter.cancel.complete": "Paste cancelado -- %s de %s blocos colocados.",
   "schematicimporter.error.no_schematic_loaded": "Nenhum esquemático carregado. Use /schem load <nome> primeiro.",
   "schematicimporter.error.load_failed": "Falha ao carregar '%s': %s",
-  "schematicimporter.error.player_only": "Este comando só pode ser executado por um jogador."
+  "schematicimporter.error.player_only": "Este comando só pode ser executado por um jogador.",
+  "schematicimporter.error.no_active_paste": "Nenhum paste ou preview ativo para cancelar.",
+  "schematicimporter.error.paste_in_progress": "Paste em andamento -- use /schem cancel primeiro.",
+  "schematicimporter.error.invalid_rotation": "Rotacao invalida. Use 90, 180 ou 270.",
+  "schematicimporter.error.not_previewing": "Nenhum preview ativo. Use /schem preview primeiro.",
+  "schematicimporter.error.no_undo": "Nada para desfazer.",
+  "schematicimporter.rotate.success": "Rotacionado %s graus. Novas dimensoes: %dx%dx%d.",
+  "schematicimporter.preview.started": "Preview iniciado (%dx%dx%d). Particulas verdes mostram a caixa delimitadora.",
+  "schematicimporter.preview.auto": "Preview ativo (%dx%dx%d). Use /schem nudge, /schem rotate, /schem confirm, ou /schem paste.",
+  "schematicimporter.preview.hint": "Use /schem nudge <direcao> para ajustar, /schem confirm para colar, /schem cancel para parar.",
+  "schematicimporter.preview.cancelled": "Preview cancelado.",
+  "schematicimporter.nudge.success": "Movido %s por %s. Nova posicao: %s, %s, %s.",
+  "schematicimporter.undo.started": "Desfazendo ultimo paste... Use /schem cancel para parar.",
+  "schematicimporter.undo.complete": "Undo completo -- %s blocos restaurados em %ss."
 }
