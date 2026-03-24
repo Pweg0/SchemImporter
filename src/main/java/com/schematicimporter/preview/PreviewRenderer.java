@@ -149,8 +149,8 @@ public class PreviewRenderer {
     private static void sendCorner(ServerLevel level, ServerPlayer player,
                                      double x, double y, double z) {
         // Send 3 particles slightly offset for a "glow" effect
-        level.sendParticles(player, CORNER, false, x, y, z, 1, 0, 0, 0, 0);
-        level.sendParticles(player, CORNER, false, x, y + 0.15, z, 1, 0, 0, 0, 0);
+        level.sendParticles(player, CORNER, true, x, y, z, 1, 0, 0, 0, 0);
+        level.sendParticles(player, CORNER, true, x, y + 0.15, z, 1, 0, 0, 0, 0);
     }
 
     /**
@@ -164,7 +164,7 @@ public class PreviewRenderer {
         int count = 0;
         for (double x = x0 + spacing; x < x1 && count < maxParticles; x += spacing) {
             for (double z = z0 + spacing; z < z1 && count < maxParticles; z += spacing) {
-                level.sendParticles(player, FLOOR_FILL, false, x, y + 0.05, z, 1, 0, 0, 0, 0);
+                level.sendParticles(player, FLOOR_FILL, true, x, y + 0.05, z, 1, 0, 0, 0, 0);
                 count++;
             }
         }
@@ -183,7 +183,7 @@ public class PreviewRenderer {
         double dz = z1 - z0;
         double length = Math.sqrt(dx * dx + dy * dy + dz * dz);
         if (length < 0.01) {
-            level.sendParticles(player, particle, false, x0, y0, z0, 1, 0, 0, 0, 0);
+            level.sendParticles(player, particle, true, x0, y0, z0, 1, 0, 0, 0, 0);
             return;
         }
 
@@ -193,7 +193,7 @@ public class PreviewRenderer {
             double px = x0 + dx * t;
             double py = y0 + dy * t;
             double pz = z0 + dz * t;
-            level.sendParticles(player, particle, false, px, py, pz, 1, 0, 0, 0, 0);
+            level.sendParticles(player, particle, true, px, py, pz, 1, 0, 0, 0, 0);
         }
     }
 }

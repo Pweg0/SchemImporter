@@ -2,6 +2,7 @@ package com.schematicimporter.command;
 
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.schematicimporter.schematic.BlockPlacement;
 import com.schematicimporter.schematic.SchematicHolder;
 import com.schematicimporter.schematic.SchematicLoader;
@@ -12,9 +13,15 @@ import com.schematicimporter.session.SessionManager;
 import com.schematicimporter.session.SessionState;
 import com.schematicimporter.paste.PasteExecutor;
 import net.minecraft.ChatFormatting;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -35,6 +42,14 @@ public class CommandHandler {
 
     private CommandHandler() {}
 
+    /** Tab-complete suggestion provider that lists available schematic files. */
+    private static final SuggestionProvider<CommandSourceStack> SCHEMATIC_SUGGESTIONS =
+        (ctx, builder) -> {
+            List<SchematicFileInfo> files = SchematicLoader.listSchematics(ctx.getSource().getServer());
+            return SharedSuggestionProvider.suggest(
+                files.stream().map(SchematicFileInfo::relativeName), builder);
+        };
+
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
         var dispatcher = event.getDispatcher();
@@ -45,6 +60,7 @@ public class CommandHandler {
                     .executes(ctx -> executeList(ctx.getSource())))
                 .then(Commands.literal("load")
                     .then(Commands.argument("name", StringArgumentType.greedyString())
+                        .suggests(SCHEMATIC_SUGGESTIONS)
                         .executes(ctx -> executeLoad(
                             ctx.getSource(),
                             StringArgumentType.getString(ctx, "name")))))
@@ -134,26 +150,60 @@ public class CommandHandler {
             return 0;
         }
 
+        // Header with separator
         source.sendSuccess(
-            () -> Component.literal(get("schematicimporter.list.header", files.size()))
-                .withStyle(ChatFormatting.AQUA),
+            () -> Component.literal("--- ")
+                .withStyle(ChatFormatting.DARK_GRAY)
+                .append(Component.literal(get("schematicimporter.list.header", files.size()))
+                    .withStyle(ChatFormatting.AQUA))
+                .append(Component.literal(" ---")
+                    .withStyle(ChatFormatting.DARK_GRAY)),
             false
         );
 
-        for (SchematicFileInfo info : files) {
-            final SchematicFileInfo fi = info;
-            source.sendSuccess(
-                () -> Component.literal(get(
-                    "schematicimporter.list.entry",
-                    fi.relativeName(),
-                    formatSize(fi.fileSizeBytes()),
-                    fi.width(),
-                    fi.height(),
-                    fi.length()
-                )).withStyle(ChatFormatting.WHITE),
-                false
-            );
+        for (int i = 0; i < files.size(); i++) {
+            final SchematicFileInfo fi = files.get(i);
+            final int index = i + 1;
+            final String loadCmd = "/schem load " + fi.relativeName();
+
+            // Clickable name that auto-fills the load command
+            MutableComponent nameComponent = Component.literal(fi.relativeName())
+                .withStyle(Style.EMPTY
+                    .withColor(ChatFormatting.GREEN)
+                    .withUnderlined(true)
+                    .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, loadCmd))
+                    .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                        Component.literal("Click to load\n")
+                            .withStyle(ChatFormatting.YELLOW)
+                            .append(Component.literal(loadCmd)
+                                .withStyle(ChatFormatting.GRAY)))));
+
+            // Build: " 1. name  |  1.2 KB  |  10x5x10"
+            MutableComponent line = Component.literal(" " + index + ". ")
+                .withStyle(ChatFormatting.GRAY)
+                .append(nameComponent)
+                .append(Component.literal("  |  ")
+                    .withStyle(ChatFormatting.DARK_GRAY))
+                .append(Component.literal(formatSize(fi.fileSizeBytes()))
+                    .withStyle(ChatFormatting.YELLOW))
+                .append(Component.literal("  |  ")
+                    .withStyle(ChatFormatting.DARK_GRAY))
+                .append(Component.literal(fi.width() + "x" + fi.height() + "x" + fi.length())
+                    .withStyle(ChatFormatting.WHITE));
+
+            source.sendSuccess(() -> line, false);
         }
+
+        // Footer hint
+        source.sendSuccess(
+            () -> Component.literal("Click a name or use ")
+                .withStyle(ChatFormatting.DARK_GRAY)
+                .append(Component.literal("/schem load <name>")
+                    .withStyle(ChatFormatting.GRAY))
+                .append(Component.literal(" (Tab to autocomplete)")
+                    .withStyle(ChatFormatting.DARK_GRAY)),
+            false
+        );
 
         return com.mojang.brigadier.Command.SINGLE_SUCCESS;
     }

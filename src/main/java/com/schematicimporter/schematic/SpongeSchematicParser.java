@@ -84,6 +84,10 @@ public class SpongeSchematicParser {
      */
     public static SchematicMetadata peekMetadata(Path path) throws IOException {
         CompoundTag root = NbtIo.readCompressed(path, NbtAccounter.unlimitedHeap());
+        // Handle "Schematic" wrapper tag (same as parseFromCompoundTag)
+        if (root.contains("Schematic")) {
+            root = root.getCompound("Schematic");
+        }
         int width  = root.getShort("Width");
         int height = root.getShort("Height");
         int length = root.getShort("Length");
